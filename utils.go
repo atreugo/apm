@@ -94,7 +94,6 @@ func ctxToRequest(ctx *atreugo.RequestCtx, req *http.Request) error {
 
 	if username, password, ok := basicAuth(ctx); ok {
 		req.SetBasicAuth(username, password)
-		req.BasicAuth()
 	}
 
 	req.Header = make(http.Header)
