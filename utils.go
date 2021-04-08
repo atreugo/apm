@@ -1,10 +1,8 @@
 package apm
 
 import (
-	"encoding/base64"
 	"net/http"
 	"net/url"
-	"strings"
 
 	"github.com/savsgio/atreugo/v11"
 	"github.com/savsgio/gotils/strconv"
@@ -43,42 +41,6 @@ func resetHTTPMap(m map[string][]string) {
 	}
 }
 
-func basicAuth(ctx *atreugo.RequestCtx) (username, password string, ok bool) {
-	auth := ctx.Request.Header.Peek("Authorization")
-	if len(auth) == 0 {
-		return
-	}
-
-	return parseBasicAuth(strconv.B2S(auth))
-}
-
-// parseBasicAuth parses an HTTP Basic Authentication string.
-// "Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==" returns ("Aladdin", "open sesame", true).
-//
-// Copied from: (net/http).parseBasicAuth.
-func parseBasicAuth(auth string) (username, password string, ok bool) {
-	const prefix = "Basic "
-
-	// Case insensitive prefix match. See Issue 22736.
-	if len(auth) < len(prefix) || !strings.EqualFold(auth[:len(prefix)], prefix) {
-		return
-	}
-
-	c, err := base64.StdEncoding.DecodeString(auth[len(prefix):])
-	if err != nil {
-		return
-	}
-
-	cs := string(c)
-	s := strings.IndexByte(cs, ':')
-
-	if s < 0 {
-		return
-	}
-
-	return cs[:s], cs[s+1:], true
-}
-
 func ctxToRequest(ctx *atreugo.RequestCtx, req *http.Request) error {
 	body := ctx.PostBody()
 
@@ -91,10 +53,6 @@ func ctxToRequest(ctx *atreugo.RequestCtx, req *http.Request) error {
 	req.Host = strconv.B2S(ctx.Host())
 	req.RemoteAddr = ctx.RemoteAddr().String()
 	req.TLS = ctx.TLSConnectionState()
-
-	if username, password, ok := basicAuth(ctx); ok {
-		req.SetBasicAuth(username, password)
-	}
 
 	req.Header = make(http.Header)
 	ctx.Request.Header.VisitAll(func(k, v []byte) {
