@@ -10,5 +10,4 @@ linters:
     - paralleltest
     - nolintlint
     - cyclop
-    
     - wrapcheck
