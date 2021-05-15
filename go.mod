@@ -1,6 +1,6 @@
 module github.com/atreugo/apm
 
-go 1.16
+go 1.12
 
 require (
 	github.com/savsgio/atreugo/v11 v11.7.0
