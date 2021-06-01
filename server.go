@@ -110,6 +110,7 @@ func WithRecovery(r RecoveryFunc) Option {
 	if r == nil {
 		panic("r == nil")
 	}
+
 	return func(a *APM) {
 		a.recovery = r
 	}

@@ -11,16 +11,13 @@ import (
 	"go.elastic.co/apm/module/apmhttp"
 )
 
-// func init() {
-// 	origTransactionFromContext := apmcontext.TransactionFromContext
-// 	apmcontext.TransactionFromContext = func(ctx context.Context) interface{} {
-// 		if tx, ok := ctx.Value(txKey).(*txCloser); ok {
-// 			return tx.Tx()
-// 		}
+func TransactionFromRequestCtx(ctx *atreugo.RequestCtx) *apm.Transaction {
+	if tx, ok := ctx.UserValue(txKey).(*txCloser); ok {
+		return tx.Tx()
+	}
 
-// 		return origTransactionFromContext(ctx)
-// 	}
-// }
+	return nil
+}
 
 func setRequestContext(ctx *fasthttp.RequestCtx, tracer *apm.Tracer, tx *apm.Transaction) (*apm.BodyCapturer, error) {
 	req := new(http.Request)

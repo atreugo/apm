@@ -22,6 +22,7 @@ func getRequestTraceparent(ctx *atreugo.RequestCtx, header string) (apm.TraceCon
 func newDynamicServerRequestIgnorer(t *apm.Tracer) RequestIgnorerFunc {
 	return func(ctx *atreugo.RequestCtx) bool {
 		uri := string(ctx.Request.URI().RequestURI())
+
 		u, err := url.ParseRequestURI(uri)
 		if err != nil {
 			return true
@@ -35,9 +36,9 @@ func serverRequestName(ctx *atreugo.RequestCtx) string {
 	b := bytebufferpool.Get()
 	defer bytebufferpool.Put(b)
 
-	b.Write(ctx.Request.Header.Method())
-	b.WriteByte(' ')
-	b.Write(ctx.Request.URI().Path())
+	b.Write(ctx.Request.Header.Method()) // nolint:errcheck
+	b.WriteByte(' ')                     // nolint:errcheck
+	b.Write(ctx.Request.URI().Path())    // nolint:errcheck
 
 	return b.String()
 }
