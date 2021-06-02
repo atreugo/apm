@@ -61,9 +61,9 @@ func setResponseContext(ctx *fasthttp.RequestCtx, tx *apm.Transaction, bc *apm.B
 func startTransactionWithBody(
 	tracer *apm.Tracer, name string, ctx *atreugo.RequestCtx,
 ) (*apm.Transaction, *apm.BodyCapturer, error) {
-	traceContext, ok := getRequestTraceparent(ctx, apmhttp.ElasticTraceparentHeader)
+	traceContext, ok := getRequestTraceparent(ctx, apmhttp.W3CTraceparentHeader)
 	if !ok {
-		traceContext, ok = getRequestTraceparent(ctx, apmhttp.W3CTraceparentHeader)
+		traceContext, ok = getRequestTraceparent(ctx, apmhttp.ElasticTraceparentHeader)
 	}
 
 	if ok {
