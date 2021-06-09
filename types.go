@@ -1,12 +1,13 @@
-package apm
+package apmatreugo // import apmatreugo "github.com/atreugo/apm"
 
 import (
 	"github.com/savsgio/atreugo/v11"
-	"github.com/valyala/fasthttp"
+
 	"go.elastic.co/apm"
 )
 
-type APM struct {
+// Factory is a factory to create the tracing middleware and panic view.
+type Factory struct {
 	tracer           *apm.Tracer
 	requestName      RequestNameFunc
 	requestIgnorer   RequestIgnorerFunc
@@ -14,14 +15,8 @@ type APM struct {
 	panicPropagation bool
 }
 
-type txCloser struct {
-	ctx *fasthttp.RequestCtx
-	tx  *apm.Transaction
-	bc  *apm.BodyCapturer
-}
-
-// Option sets options for tracing server requests.
-type Option func(*APM)
+// Option sets options for tracing requests.
+type Option func(*Factory)
 
 // RequestNameFunc is the type of a function for use in
 // WithServerRequestName.

@@ -1,57 +1,70 @@
-package apm
+package apmatreugo // import apmatreugo "github.com/atreugo/apm"
 
 import (
 	"github.com/savsgio/atreugo/v11"
 	"github.com/valyala/fasthttp"
+
 	"go.elastic.co/apm"
+	"go.elastic.co/apm/module/apmfasthttp"
 )
 
-func New(options ...Option) *APM {
-	a := new(APM)
+// New returns a factory instance.
+func New(options ...Option) *Factory {
+	f := new(Factory)
 
 	for i := range options {
-		options[i](a)
+		options[i](f)
 	}
 
-	if a.tracer == nil {
-		a.tracer = apm.DefaultTracer
+	if f.tracer == nil {
+		f.tracer = apm.DefaultTracer
 	}
 
-	if a.requestName == nil {
-		a.requestName = serverRequestName
+	if f.requestName == nil {
+		f.requestName = func(ctx *atreugo.RequestCtx) string {
+			return apmfasthttp.ServerRequestName(ctx.RequestCtx)
+		}
 	}
 
-	if a.requestIgnorer == nil {
-		a.requestIgnorer = newDynamicServerRequestIgnorer(a.tracer)
+	if f.requestIgnorer == nil {
+		requestIgnorer := apmfasthttp.NewDynamicServerRequestIgnorer(f.tracer)
+		f.requestIgnorer = func(ctx *atreugo.RequestCtx) bool {
+			return requestIgnorer(ctx.RequestCtx)
+		}
 	}
 
-	if a.recovery == nil {
-		a.recovery = newTraceRecovery(a.tracer)
+	if f.recovery == nil {
+		recovery := apmfasthttp.NewTraceRecovery(f.tracer)
+		f.recovery = func(ctx *atreugo.RequestCtx, tx *apm.Transaction, bc *apm.BodyCapturer, recovered interface{}) {
+			recovery(ctx.RequestCtx, tx, bc, recovered)
+		}
 	}
 
-	return a
+	return f
 }
 
-func (a *APM) Middleware() atreugo.Middleware {
+// Middleware returns a middleware.
+func (f *Factory) Middleware() atreugo.Middleware {
 	return func(ctx *atreugo.RequestCtx) error {
-		if !a.tracer.Recording() || a.requestIgnorer(ctx) {
+		if !f.tracer.Recording() || f.requestIgnorer(ctx) {
 			return ctx.Next()
 		}
 
-		tx, bc, err := startTransactionWithBody(a.tracer, a.requestName(ctx), ctx)
+		tx, _, err := apmfasthttp.StartTransactionWithBody(f.tracer, f.requestName(ctx), ctx.RequestCtx)
 		if err != nil {
 			return ctx.ErrorResponse(err, fasthttp.StatusInternalServerError)
 		}
 
-		ctx.SetUserValue(txKey, newTxCloser(ctx.RequestCtx, tx, bc))
+		tx.Context.SetFramework("atreugo", "v11")
 
 		return ctx.Next()
 	}
 }
 
-func (a *APM) PanicView() atreugo.PanicView {
+// PanicView returns a panic view.
+func (f *Factory) PanicView() atreugo.PanicView {
 	return func(ctx *atreugo.RequestCtx, err interface{}) {
-		if a.panicPropagation {
+		if f.panicPropagation {
 			defer panic(err)
 		}
 
@@ -61,9 +74,10 @@ func (a *APM) PanicView() atreugo.PanicView {
 			ctx.Response.Header.SetStatusCode(fasthttp.StatusInternalServerError)
 		}
 
-		if tx, ok := ctx.UserValue(txKey).(*txCloser); ok {
-			a.recovery(ctx, tx.Tx(), tx.BodyCapturer(), err)
-		}
+		tx := apm.TransactionFromContext(ctx)
+		bc := apm.BodyCapturerFromContext(ctx)
+
+		f.recovery(ctx, tx, bc, err)
 	}
 }
 
@@ -74,8 +88,8 @@ func WithTracer(t *apm.Tracer) Option {
 		panic("t == nil")
 	}
 
-	return func(a *APM) {
-		a.tracer = t
+	return func(f *Factory) {
+		f.tracer = t
 	}
 }
 
@@ -86,8 +100,8 @@ func WithServerRequestName(fn RequestNameFunc) Option {
 		panic("fn == nil")
 	}
 
-	return func(a *APM) {
-		a.requestName = fn
+	return func(f *Factory) {
+		f.requestName = fn
 	}
 }
 
@@ -99,8 +113,8 @@ func WithServerRequestIgnorer(fn RequestIgnorerFunc) Option {
 		panic("fn == nil")
 	}
 
-	return func(a *APM) {
-		a.requestIgnorer = fn
+	return func(f *Factory) {
+		f.requestIgnorer = fn
 	}
 }
 
@@ -111,8 +125,8 @@ func WithRecovery(r RecoveryFunc) Option {
 		panic("r == nil")
 	}
 
-	return func(a *APM) {
-		a.recovery = r
+	return func(f *Factory) {
+		f.recovery = r
 	}
 }
 
@@ -120,7 +134,7 @@ func WithRecovery(r RecoveryFunc) Option {
 // Any panic will be recovered and recorded as an error in a transaction, then
 // panic will be caused again.
 func WithPanicPropagation() Option {
-	return func(a *APM) {
-		a.panicPropagation = true
+	return func(f *Factory) {
+		f.panicPropagation = true
 	}
 }
