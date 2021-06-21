@@ -2,7 +2,6 @@ package apmatreugo // import apmatreugo "github.com/atreugo/apm"
 
 import (
 	"github.com/savsgio/atreugo/v11"
-
 	"go.elastic.co/apm"
 )
 

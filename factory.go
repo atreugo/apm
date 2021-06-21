@@ -3,7 +3,6 @@ package apmatreugo // import apmatreugo "github.com/atreugo/apm"
 import (
 	"github.com/savsgio/atreugo/v11"
 	"github.com/valyala/fasthttp"
-
 	"go.elastic.co/apm"
 	"go.elastic.co/apm/module/apmfasthttp"
 )
