@@ -3,8 +3,8 @@ package apmatreugo // import apmatreugo "github.com/atreugo/apm"
 import (
 	"github.com/savsgio/atreugo/v11"
 	"github.com/valyala/fasthttp"
-	"go.elastic.co/apm"
-	"go.elastic.co/apm/module/apmfasthttp"
+	"go.elastic.co/apm/module/apmfasthttp/v2"
+	"go.elastic.co/apm/v2"
 )
 
 // New returns a factory instance.
@@ -16,7 +16,7 @@ func New(options ...Option) *Factory {
 	}
 
 	if f.tracer == nil {
-		f.tracer = apm.DefaultTracer
+		f.tracer = apm.DefaultTracer()
 	}
 
 	if f.requestName == nil {

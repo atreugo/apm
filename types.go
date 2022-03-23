@@ -2,7 +2,7 @@ package apmatreugo // import apmatreugo "github.com/atreugo/apm"
 
 import (
 	"github.com/savsgio/atreugo/v11"
-	"go.elastic.co/apm"
+	"go.elastic.co/apm/v2"
 )
 
 // Factory is a factory to create the tracing middleware and panic view.
