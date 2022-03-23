@@ -11,3 +11,4 @@ linters:
     - nolintlint
     - cyclop
     - wrapcheck
+    - varnamelen
