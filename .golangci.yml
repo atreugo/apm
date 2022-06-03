@@ -12,3 +12,9 @@ linters:
     - cyclop
     - wrapcheck
     - varnamelen
+
+    # Deprecated
+    - maligned
+    - scopelint
+    - golint
+    - interfacer
